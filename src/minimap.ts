@@ -17,6 +17,9 @@ export default class Minimap<
   private minimap: MapT | null
   private minimapCanvas: HTMLCanvasElement | HTMLElement | null
 
+  private toggleButton: HTMLAnchorElement | null
+
+  private isCollapsed: boolean
   private isDragging: boolean
   private isCursorOverFeature: boolean
 
@@ -26,6 +29,8 @@ export default class Minimap<
   private trackingRectCoordinates: number[][][]
 
   private onLoad: () => void
+
+  private onToggle: () => void
 
   private onMainMapMove: () => void
   private onMainMapMoveEnd: () => void
@@ -42,6 +47,9 @@ export default class Minimap<
     this.container = null
     this.minimapCanvas = null
 
+    this.toggleButton = null
+
+    this.isCollapsed = false
     this.isDragging = false
     this.isCursorOverFeature = false
     this.currentPoint = [0, 0]
@@ -49,6 +57,8 @@ export default class Minimap<
     this.trackingRectCoordinates = [[[], [], [], [], []]]
 
     this.onLoad = this.load.bind(this)
+
+    this.onToggle = this.toggle.bind(this)
 
     this.onMainMapMove = this.update.bind(this)
     this.onMainMapMoveEnd = this.mapMoved.bind(this)
@@ -68,7 +78,7 @@ export default class Minimap<
       },
       center: [0, 0],
 
-      zoomLevelOffset: -4,
+      zoomLevelOffset: -3,
 
       lineColor: "#136a7e",
       lineWidth: 1,
@@ -77,6 +87,7 @@ export default class Minimap<
       fillColor: "#d77a34",
       fillOpacity: 0.25,
 
+      toggleDisplay: false,
       dragPan: false,
       scrollZoom: false,
       boxZoom: false,
@@ -101,7 +112,8 @@ export default class Minimap<
       attributionControl: false,
       container: this.container,
       style: opts.style,
-      center: opts.center
+      center: opts.center,
+      trackResize: false,
     })
 
 
@@ -111,8 +123,9 @@ export default class Minimap<
 
     minimap.getCanvas().removeAttribute("tabindex")
 
-
     minimap.on("load", this.onLoad)
+
+    this.enableToggle()
 
     return this.container
   }
@@ -136,12 +149,20 @@ export default class Minimap<
       this.minimapCanvas.removeEventListener("mousewheel", this.preventDefault)
     }
 
+    if (this.toggleButton) {
+      this.toggleButton.removeEventListener("click", this.preventDefault)
+      this.toggleButton.removeEventListener("click", this.onToggle)
+    }
+
     if (this.container) {
       this.container.removeEventListener("contextmenu", this.preventDefault)
+
+      if (this.toggleButton) this.container.removeChild(this.toggleButton)
       const parentNode = this.container.parentNode
       if (parentNode)
         parentNode.removeChild(this.container)
     }
+
     this.minimap = null
   }
 
@@ -238,6 +259,39 @@ export default class Minimap<
       this.isDragging = true
       this.previousPoint = this.currentPoint
       this.currentPoint = [e.lngLat.lng, e.lngLat.lat]
+    }
+  }
+
+  toggle(): void {
+    !this.isCollapsed ? this.collapse() : this.expand()
+  }
+
+  private collapse(): void {
+    if (!this.container) return
+    if (!this.toggleButton) return
+
+    const opts = this.options
+
+    if (opts.toggleDisplay) {
+      this.container.style.width = "24px"
+      this.container.style.height = "24px"
+      // this.toggleButton.style.backgroundColor = opts.lineColor || "#136a7e"
+      this.toggleButton.innerHTML = "<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 -960 960 960' width='24'><path d='M200-200v-240h80v160h160v80H200Zm480-320v-160H520v-80h240v240h-80Z'/></svg>"
+      this.isCollapsed = true
+    }
+  }
+
+  private expand(): void {
+    if (!this.container) return
+    if (!this.toggleButton) return
+
+    const opts = this.options
+
+    if (opts.toggleDisplay) {
+      this.container.style.width = opts.width || "320px"
+      this.container.style.height = opts.height || "180px"
+      this.toggleButton.innerHTML = "<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 -960 960 960' width='24' style='fillColor: inherit'><path d='M440-440v240h-80v-160H200v-80h240Zm160-320v160h160v80H520v-240h80Z'/></svg>"
+      this.isCollapsed = false
     }
   }
 
@@ -360,7 +414,11 @@ export default class Minimap<
 
     container.className = "mapgl-minimap maplibregl-ctrl mapboxgl-ctrl"
     if (opts.containerClass) container.classList.add(opts.containerClass)
-    container.setAttribute("style", "width: " + opts.width + "; height: " + opts.height + ";")
+    container.setAttribute(
+      "style",
+      "box-sizing: content-box; box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65); border: 3px solid white; width: " + opts.width + "; height: " + opts.height + ";"
+    )
+    container.style.transition = "height 0.6s, width 0.6s"
     container.addEventListener("contextmenu", this.preventDefault)
 
     map.getContainer().appendChild(container)
@@ -370,6 +428,41 @@ export default class Minimap<
     }
 
     return container
+  }
+
+  private enableToggle(): void {
+    if (!this.container) return
+    const opts = this.options
+    if (!opts.toggleDisplay) return
+
+    this.toggleButton = this.createToggleButton()
+
+    this.container.appendChild(this.toggleButton)
+
+    this.toggleButton.setAttribute(
+      "style",
+      "position: absolute; top: 0; right: 0;z-index: 1000; margin:0; background-color: white;"
+    )
+    this.toggleButton.style.width = "24px"
+    this.toggleButton.style.height = "24px"
+    this.toggleButton.style.display = "block"
+  }
+
+  private createToggleButton(): HTMLAnchorElement {
+    const opts = this.options
+    const button = document.createElement("a")
+    button.innerHTML = "<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 -960 960 960' width='24' style='fillColor: inherit'><path d='M440-440v240h-80v-160H200v-80h240Zm160-320v160h160v80H520v-240h80Z'/></svg>"
+    button.className = "mapgl-minimap maplibregl-ctrl mapboxgl-ctrl"
+    button.style.margin = "0"
+    button.style.display = "block"
+    button.style.backgroundColor = opts.lineColor || "#136a7e"
+    button.style.fill = opts.fillColor || "#d77a34"
+    button.href = "#"
+
+    button.addEventListener("click", this.preventDefault)
+    // Enable button toggle
+    button.addEventListener("click", this.onToggle)
+    return button
   }
 
   private preventDefault(e: Event): void {

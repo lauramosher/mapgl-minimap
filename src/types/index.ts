@@ -96,4 +96,6 @@ export interface MinimapOptions {
   doubleClickZoom?: boolean
   touchZoomRotate?: boolean
   containerClass?: string
+
+  toggleDisplay?: boolean
 }
