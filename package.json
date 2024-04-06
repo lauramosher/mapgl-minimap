@@ -3,6 +3,7 @@
   "description": "Minimap display utility for Map GL JS-compatible libraries",
   "version": "0.1.0",
   "type": "module",
+  "homepage": "https://github.com/lauramosher/mapgl-minimap",
   "keywords": [
     "mapbox",
     "maplibre",
@@ -11,7 +12,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/lauramosher/mapgl-minimap.git"
+    "url": "git@github.com:lauramosher/mapgl-minimap.git"
   },
   "license": "ISC",
   "scripts": {
