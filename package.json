@@ -1,0 +1,50 @@
+{
+  "name": "mapgl-minimap",
+  "description": "Minimap display utility for Map GL JS-compatible libraries",
+  "version": "0.1.0",
+  "type": "module",
+  "keywords": [
+    "mapbox",
+    "maplibre",
+    "mapgl",
+    "minimap"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lauramosher/mapgl-minimap.git"
+  },
+  "license": "ISC",
+  "scripts": {
+    "build": "tsup",
+    "lint": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "author": "Laura Mosher",
+  "devDependencies": {
+    "@mapbox/point-geometry": "^0.1.0",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
+    "eslint": "^8.56.0",
+    "maplibre-gl": "^3.6.2",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@maplibre/maplibre-gl-style-spec": "^19.3.3",
+    "@types/mapbox-gl": "^2.7.19"
+  }
+}
